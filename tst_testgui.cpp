@@ -29,7 +29,7 @@ private slots:
     void inputDataA();  //имитируем событие щелчка левой кнопкой мыши на поле ввода A
     void inputDataB();  //имитируем событие щелчка левой кнопкой мыши на поле ввода B
     void buttonWork();  //сценарий проверки независимой работы кнопки
-
+    void focus();
 };
 
 testGUI::testGUI()
@@ -76,14 +76,14 @@ void testGUI::inputDataB()
     // имитируем нажатие последовательности клавиш 123
     QTest::keyClicks(lineEditB, "123");
     // сравниваем введенное значение с образцом
-    QCOMPARE(lineEditB->text(), QString("1234"));
+    QCOMPARE(lineEditB->text(), QString("123"));
     // очищаем поле ввода
     lineEditB->clear();
 }
 
 void testGUI::buttonWork()
 {
-    QObject::disconnect(pushButton, SIGNAL(clicked()), mainWindow, SLOT(on_pushButton_clicked()));
+    QObject::disconnect(pushButton, SIGNAL(clicked()), mainWindow, SLOT(calculate()));
     // создаем объект инспектора сигналов, реагирующего на сигнал clicked() кнопки
     QSignalSpy clickSpy(pushButton, SIGNAL(clicked()));
     // имитируем событие нажатия кнопки
@@ -91,7 +91,21 @@ void testGUI::buttonWork()
     // проверяем, что инспектор зафиксировал одно событие
     QCOMPARE(clickSpy.count(), 1);
     // присоединяем слот обработки данных обратно
-    QObject::connect(pushButton, SIGNAL(clicked()), mainWindow, SLOT(on_pushButton_clicked()));
+    QObject::connect(pushButton, SIGNAL(clicked()), mainWindow, SLOT(calculate()));
+}
+
+void testGUI::focus()
+{
+    QTest::mouseClick(lineEditA, Qt::LeftButton);
+    QVERIFY(lineEditA->hasFocus());
+    QTest::keyClick(lineEditA, Qt::Key::Key_Tab);
+    QVERIFY(lineEditB->hasFocus());
+    QTest::keyClick(lineEditA, Qt::Key::Key_Tab);
+    QVERIFY(pushButton->hasFocus());
+    QTest::keyClick(pushButton, Qt::Key::Key_Tab);
+    QVERIFY(listWidget->hasFocus());
+    QTest::keyClick(pushButton, Qt::Key::Key_Tab);
+    QVERIFY(lineEditA->hasFocus());
 }
 
 
