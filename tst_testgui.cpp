@@ -26,9 +26,9 @@ public:
 private slots:
     void initTestCase();
     void cleanupTestCase();
-    void inputDataA();
-    void inputDataB();
-    void clickB();
+    void inputDataA();  //имитируем событие щелчка левой кнопкой мыши на поле ввода A
+    void inputDataB();  //имитируем событие щелчка левой кнопкой мыши на поле ввода B
+    void buttonWork();  //сценарий проверки независимой работы кнопки
 
 };
 
@@ -76,14 +76,22 @@ void testGUI::inputDataB()
     // имитируем нажатие последовательности клавиш 123
     QTest::keyClicks(lineEditB, "123");
     // сравниваем введенное значение с образцом
-    QCOMPARE(lineEditB->text(), QString("123"));
+    QCOMPARE(lineEditB->text(), QString("1234"));
     // очищаем поле ввода
-    lineEditA->clear();
+    lineEditB->clear();
 }
 
-void testGUI::clickB()
+void testGUI::buttonWork()
 {
-
+    QObject::disconnect(pushButton, SIGNAL(clicked()), mainWindow, SLOT(on_pushButton_clicked()));
+    // создаем объект инспектора сигналов, реагирующего на сигнал clicked() кнопки
+    QSignalSpy clickSpy(pushButton, SIGNAL(clicked()));
+    // имитируем событие нажатия кнопки
+    QTest::mouseClick(pushButton, Qt::LeftButton);
+    // проверяем, что инспектор зафиксировал одно событие
+    QCOMPARE(clickSpy.count(), 1);
+    // присоединяем слот обработки данных обратно
+    QObject::connect(pushButton, SIGNAL(clicked()), mainWindow, SLOT(on_pushButton_clicked()));
 }
 
 
