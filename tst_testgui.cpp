@@ -19,9 +19,12 @@ private:
     QLineEdit * lineEditB;
     QPushButton * pushButton;
     QListWidget * listWidget;
+    bool seenMessage;
+    QString messageText;
 public:
     testGUI();
     ~testGUI();
+    void close_messagebox();
 
 private slots:
     void initTestCase();
@@ -29,8 +32,23 @@ private slots:
     void inputDataA();  //имитируем событие щелчка левой кнопкой мыши на поле ввода A
     void inputDataB();  //имитируем событие щелчка левой кнопкой мыши на поле ввода B
     void buttonWork();  //сценарий проверки независимой работы кнопки
-    void focus();
+    void focus();       //сценарий проверки последовательности перехода фокуса ввода по компонентам формы
+    void clearL();      //проверки очистки списка вывода перед заполнением
+    void inputDataAFail(); //сценарий проверки появления окна с сообщением об ошибке при недопустимом значении A:
+    void inputDataBFail();
+    void testPositiveA();
+    void testPositiveB();
 };
+
+void testGUI::close_messagebox()
+{
+    QMessageBox * msgbox = qobject_cast<QMessageBox*>(QApplication::activeModalWidget());
+    if(msgbox) {
+        seenMessage = true;
+        messageText = msgbox->text();
+        msgbox->close();
+    }
+}
 
 testGUI::testGUI()
 {
@@ -108,6 +126,73 @@ void testGUI::focus()
     QVERIFY(lineEditA->hasFocus());
 }
 
+void testGUI::clearL()
+{
+    lineEditA->setText("10");
+    lineEditB->setText("20");
+    // генерируем событие нажатия кнопки
+    pushButton->click();
+    // проверяем количество значений в списке
+    QCOMPARE(listWidget->count(), 4);
+    // повторно нажимаем кнопку
+    pushButton->click();
+    // и проверяем количество значений
+    QCOMPARE(listWidget->count(), 4);
+}
+
+void testGUI::inputDataAFail()
+{
+    lineEditA->setText("");
+    lineEditB->setText("20");
+    seenMessage = false;
+    // через 100 мс выполняем функцию close_messagebox()
+    QTimer::singleShot(100, this, &testGUI::close_messagebox);
+    pushButton->click();
+    if(!seenMessage) {
+        QFAIL("no messagebox");
+    }
+    QCOMPARE(messageText, QString("A must be an integer"));
+}
+
+void testGUI::inputDataBFail()
+{
+    lineEditB->setText("");
+    lineEditA->setText("20");
+    seenMessage = false;
+    // через 100 мс выполняем функцию close_messagebox()
+    QTimer::singleShot(100, this, &testGUI::close_messagebox);
+    pushButton->click();
+    if(!seenMessage) {
+        QFAIL("no messagebox");
+    }
+    QCOMPARE(messageText, QString("B must be an integer"));
+}
+
+void testGUI::testPositiveA()
+{
+    lineEditA->setText("-1");
+    lineEditB->setText("10");
+    seenMessage = false;
+    QTimer::singleShot(100, this, &testGUI::close_messagebox);
+    pushButton->click();
+    if(!seenMessage) {
+        QFAIL("no messagebox");
+    }
+    QCOMPARE(messageText, QString("a must be positive"));
+}
+
+void testGUI::testPositiveB()
+{
+    lineEditA->setText("10");
+    lineEditB->setText("-1");
+    seenMessage = false;
+    QTimer::singleShot(100, this, &testGUI::close_messagebox);
+    pushButton->click();
+    if(!seenMessage) {
+        QFAIL("no messagebox");
+    }
+    QCOMPARE(messageText, QString("b must be positive"));
+}
 
 QTEST_MAIN(testGUI)
 
