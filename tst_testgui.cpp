@@ -38,6 +38,7 @@ private slots:
     void inputDataBFail();
     void testPositiveA();
     void testPositiveB();
+    void AmoreB();
 };
 
 void testGUI::close_messagebox()
@@ -156,8 +157,8 @@ void testGUI::inputDataAFail()
 
 void testGUI::inputDataBFail()
 {
-    lineEditB->setText("");
     lineEditA->setText("20");
+    lineEditB->setText("");
     seenMessage = false;
     // через 100 мс выполняем функцию close_messagebox()
     QTimer::singleShot(100, this, &testGUI::close_messagebox);
@@ -192,6 +193,19 @@ void testGUI::testPositiveB()
         QFAIL("no messagebox");
     }
     QCOMPARE(messageText, QString("b must be positive"));
+}
+
+void testGUI::AmoreB()
+{
+    lineEditA->setText("20");
+    lineEditB->setText("10");
+    seenMessage = false;
+    QTimer::singleShot(100, this, &testGUI::close_messagebox);
+    pushButton->click();
+    if(!seenMessage) {
+        QFAIL("no messagebox");
+    }
+    QCOMPARE(messageText, QString("b must be more than a"));
 }
 
 QTEST_MAIN(testGUI)
